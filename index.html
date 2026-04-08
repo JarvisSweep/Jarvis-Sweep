@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jarvis Sweep</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#020408;--panel:#050d15;--border:#0a2a3a;--border2:#0d3a50;
+--arc:#00d4ff;--arc2:#0099cc;--green:#00ff88;--red:#ff3355;--yel:#ffcc00;
+--white:#e8f4ff;--t2:#5a8fa8;--t3:#2a4a5a;
+--font:'Rajdhani',sans-serif;--mono:'Share Tech Mono',monospace;
+}
+
+body{
+background:var(–bg);color:var(–white);font-family:var(–font);
+min-height:100vh;display:flex;flex-direction:column;align-items:center;
+justify-content:center;overflow:hidden;position:relative;
+}
+
+body::before{
+content:’’;position:fixed;inset:0;
+background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);
+background-size:50px 50px;animation:gridMove 20s linear infinite;
+}
+@keyframes gridMove{0%{background-position:0 0}100%{background-position:50px 50px}}
+
+/* LOCK SCREEN */
+.lock-screen{
+position:fixed;inset:0;background:var(–bg);
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+z-index:100;padding:24px;
+}
+
+.lock-screen.hidden{display:none}
+
+.lock-logo{
+display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:40px;
+}
+
+.lock-ring{
+width:80px;height:80px;position:relative;
+display:flex;align-items:center;justify-content:center;
+}
+
+.lock-ring svg{position:absolute;inset:0;animation:spin 8s linear infinite}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.lock-ring svg.counter{animation:spinr 12s linear infinite}
+@keyframes spinr{0%{transform:rotate(0deg)}100%{transform:rotate(-360deg)}}
+
+.lock-core{
+width:48px;height:48px;
+background:radial-gradient(circle,var(–arc),var(–arc2));
+border-radius:50%;
+box-shadow:0 0 30px var(–arc),0 0 60px rgba(0,212,255,0.3);
+animation:pulse 2s ease-in-out infinite;
+display:flex;align-items:center;justify-content:center;
+font-size:22px;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 30px var(–arc),0 0 60px rgba(0,212,255,0.3)}50%{box-shadow:0 0 40px var(–arc),0 0 80px rgba(0,212,255,0.5)}}
+
+.lock-title{
+font-size:36px;font-weight:700;letter-spacing:8px;
+color:var(–arc);text-shadow:0 0 30px rgba(0,212,255,0.5);
+text-align:center;
+}
+.lock-sub{font-size:12px;color:var(–t2);letter-spacing:4px;font-family:var(–mono);text-align:center}
+
+.lock-box{
+background:var(–panel);border:1px solid var(–border2);
+border-radius:16px;padding:32px;width:100%;max-width:380px;
+position:relative;overflow:hidden;
+}
+
+.lock-box::before{
+content:’’;position:absolute;top:0;left:0;right:0;height:1px;
+background:linear-gradient(90deg,transparent,var(–arc),transparent);
+}
+
+.lock-label{
+font-size:11px;color:var(–t2);letter-spacing:3px;
+font-family:var(–mono);margin-bottom:12px;text-align:center;
+}
+
+.key-dots{
+display:flex;justify-content:center;gap:12px;margin-bottom:20px;
+}
+
+.key-dot{
+width:14px;height:14px;border-radius:50%;
+background:var(–border2);border:1px solid var(–border);
+transition:all 0.2s;
+}
+
+.key-dot.filled{
+background:var(–arc);
+box-shadow:0 0 8px var(–arc);
+border-color:var(–arc);
+}
+
+.key-dot.error{
+background:var(–red);
+box-shadow:0 0 8px var(–red);
+border-color:var(–red);
+animation:shake 0.3s ease;
+}
+
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+.key-input{
+width:100%;background:rgba(0,212,255,0.05);
+border:1px solid var(–border2);border-radius:10px;
+padding:14px 16px;color:var(–white);font-family:var(–mono);
+font-size:18px;letter-spacing:6px;outline:none;text-align:center;
+transition:border-color 0.2s;margin-bottom:16px;
+}
+
+.key-input:focus{border-color:var(–arc)}
+.key-input.error{border-color:var(–red);animation:shake 0.3s ease}
+.key-input.success{border-color:var(–green)}
+
+.unlock-btn{
+width:100%;background:linear-gradient(135deg,var(–arc),var(–arc2));
+color:#000;border:none;border-radius:10px;padding:14px;
+font-family:var(–font);font-weight:700;font-size:16px;
+letter-spacing:3px;cursor:pointer;transition:all 0.2s;
+}
+
+.unlock-btn:hover{opacity:0.85;transform:translateY(-1px)}
+.unlock-btn:active{transform:translateY(0)}
+
+.error-msg{
+font-size:11px;color:var(–red);letter-spacing:2px;
+font-family:var(–mono);text-align:center;margin-top:12px;
+display:none;
+}
+.error-msg.show{display:block}
+
+.lock-footer{
+margin-top:24px;font-size:10px;color:var(–t3);
+letter-spacing:2px;font-family:var(–mono);text-align:center;
+}
+
+/* MAIN DASHBOARD */
+.dashboard{
+display:none;flex-direction:column;align-items:center;
+width:100%;max-width:500px;padding:24px;
+position:relative;z-index:10;gap:20px;
+}
+.dashboard.show{display:flex}
+
+.dash-header{
+display:flex;flex-direction:column;align-items:center;gap:12px;
+margin-bottom:8px;
+}
+
+.dash-ring{
+width:70px;height:70px;position:relative;
+display:flex;align-items:center;justify-content:center;
+}
+.dash-ring svg{position:absolute;inset:0;animation:spin 8s linear infinite}
+.dash-ring svg.counter{animation:spinr 12s linear infinite}
+.dash-core{
+width:44px;height:44px;
+background:radial-gradient(circle,var(–arc),var(–arc2));
+border-radius:50%;box-shadow:0 0 25px var(–arc);
+animation:pulse 2s ease-in-out infinite;
+font-size:20px;display:flex;align-items:center;justify-content:center;
+}
+
+.dash-title{font-size:32px;font-weight:700;letter-spacing:6px;color:var(–arc);text-shadow:0 0 20px rgba(0,212,255,0.4)}
+.dash-sub{font-size:11px;color:var(–t2);letter-spacing:3px;font-family:var(–mono)}
+
+.dash-status{
+display:flex;align-items:center;gap:8px;
+background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);
+border-radius:20px;padding:8px 20px;
+}
+.dash-dot{width:8px;height:8px;background:var(–green);border-radius:50%;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.dash-status-txt{font-size:12px;color:var(–green);letter-spacing:2px;font-family:var(–mono)}
+
+/* NAV CARDS */
+.nav-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%}
+
+.nav-card{
+background:var(–panel);border:1px solid var(–border);
+border-radius:16px;padding:28px 20px;
+display:flex;flex-direction:column;align-items:center;gap:12px;
+cursor:pointer;transition:all 0.2s;text-decoration:none;
+position:relative;overflow:hidden;
+}
+
+.nav-card::before{
+content:’’;position:absolute;top:0;left:0;right:0;height:1px;
+background:linear-gradient(90deg,transparent,var(–arc),transparent);
+opacity:0;transition:opacity 0.2s;
+}
+
+.nav-card:hover{
+border-color:var(–arc);
+background:rgba(0,212,255,0.05);
+transform:translateY(-2px);
+}
+
+.nav-card:hover::before{opacity:1}
+
+.nav-card-icon{font-size:40px}
+.nav-card-title{font-size:18px;font-weight:700;letter-spacing:2px;color:var(–white)}
+.nav-card-sub{font-size:10px;color:var(–t2);letter-spacing:1px;font-family:var(–mono);text-align:center}
+
+.nav-card.journal .nav-card-title{color:var(–green)}
+.nav-card.journal:hover{border-color:var(–green);background:rgba(0,255,136,0.05)}
+.nav-card.journal::before{background:linear-gradient(90deg,transparent,var(–green),transparent)}
+
+.nav-card.assistant .nav-card-title{color:var(–arc)}
+
+/* STATS ROW */
+.stats-row{
+display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;
+}
+
+.stat{
+background:var(–panel);border:1px solid var(–border);
+border-radius:10px;padding:14px;text-align:center;
+}
+.stat-l{font-size:10px;color:var(–t3);letter-spacing:1px;font-family:var(–mono);margin-bottom:6px}
+.stat-v{font-size:18px;font-weight:700;font-family:var(–mono)}
+
+/* CLOCK */
+.dash-clock{
+background:var(–panel);border:1px solid var(–border);
+border-radius:10px;padding:12px 20px;width:100%;
+display:flex;justify-content:space-between;align-items:center;
+}
+.clock-time{font-size:20px;font-weight:600;font-family:var(–mono);color:var(–arc)}
+.session-badge{font-size:10px;font-family:var(–mono);padding:4px 12px;border-radius:4px;letter-spacing:1px}
+.s-active{background:rgba(0,255,136,0.1);color:var(–green);border:1px solid rgba(0,255,136,0.3)}
+.s-closed{background:rgba(90,143,168,0.1);color:var(–t2);border:1px solid var(–border)}
+.s-pre{background:rgba(255,204,0,0.1);color:var(–yel);border:1px solid rgba(255,204,0,0.3)}
+
+.logout-btn{
+background:none;border:1px solid var(–border);border-radius:8px;
+color:var(–t3);padding:8px 16px;font-family:var(–mono);font-size:10px;
+letter-spacing:2px;cursor:pointer;transition:all 0.2s;width:100%;
+}
+.logout-btn:hover{border-color:var(–red);color:var(–red)}
+</style>
+
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+
+<div class="lock-screen" id="lockScreen">
+<div class="lock-logo">
+<div class="lock-ring">
+<svg viewBox="0 0 80 80" fill="none">
+<circle cx="40" cy="40" r="36" stroke="rgba(0,212,255,0.3)" stroke-width="1"/>
+<path d="M40 4 A36 36 0 0 1 76 40" stroke="#00d4ff" stroke-width="2" stroke-linecap="round"/>
+<path d="M40 76 A36 36 0 0 1 4 40" stroke="rgba(0,212,255,0.4)" stroke-width="1" stroke-linecap="round"/>
+</svg>
+<svg class="counter" viewBox="0 0 80 80" fill="none">
+<circle cx="40" cy="40" r="26" stroke="rgba(0,212,255,0.15)" stroke-width="1"/>
+<path d="M40 14 A26 26 0 0 1 66 40" stroke="rgba(0,212,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
+<div class="lock-core">🔐</div>
+</div>
+<div class="lock-title">JARVIS SWEEP</div>
+<div class="lock-sub">Restricted Access — Authorized Personnel Only</div>
+</div>
+
+<div class="lock-box">
+<div class="lock-label">ENTER MASTER KEY</div>
+<div class="key-dots" id="keyDots">
+<div class="key-dot" id="dot0"></div>
+<div class="key-dot" id="dot1"></div>
+<div class="key-dot" id="dot2"></div>
+<div class="key-dot" id="dot3"></div>
+<div class="key-dot" id="dot4"></div>
+<div class="key-dot" id="dot5"></div>
+</div>
+<input type="password" class="key-input" id="masterKeyInput"
+placeholder="••••••" maxlength="20"
+oninput="updateDots()"
+onkeydown="if(event.key==='Enter')unlock()">
+<button class="unlock-btn" onclick="unlock()">UNLOCK SYSTEM</button>
+<div class="error-msg" id="errorMsg">⚠ ACCESS DENIED — INVALID KEY</div>
+</div>
+
+<div class="lock-footer">JARVIS SWEEP v1.0 · AUTHORIZED ACCESS ONLY</div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+
+<div class="dashboard" id="dashboard">
+
+<div class="dash-header">
+<div class="dash-ring">
+<svg viewBox="0 0 70 70" fill="none">
+<circle cx="35" cy="35" r="32" stroke="rgba(0,212,255,0.3)" stroke-width="1"/>
+<path d="M35 3 A32 32 0 0 1 67 35" stroke="#00d4ff" stroke-width="2" stroke-linecap="round"/>
+</svg>
+<svg class="counter" viewBox="0 0 70 70" fill="none">
+<circle cx="35" cy="35" r="22" stroke="rgba(0,212,255,0.15)" stroke-width="1"/>
+<path d="M35 13 A22 22 0 0 1 57 35" stroke="rgba(0,212,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
+<div class="dash-core">🤖</div>
+</div>
+<div class="dash-title">JARVIS SWEEP</div>
+<div class="dash-sub">Autonomous NQ Futures Trading System</div>
+</div>
+
+<div class="dash-status">
+<div class="dash-dot"></div>
+<div class="dash-status-txt">ALL SYSTEMS OPERATIONAL</div>
+</div>
+
+<div class="dash-clock">
+<div>
+<div style="font-size:10px;color:var(--t3);letter-spacing:2px;font-family:var(--mono);margin-bottom:4px">EST TIME</div>
+<div class="clock-time" id="dashClock">--:--:--</div>
+</div>
+<div class="session-badge s-closed" id="dashSession">SESSION CLOSED</div>
+</div>
+
+<div class="nav-cards">
+<a class='nav-card journal' href='/jarvis_journal'>
+<div class="nav-card-icon">📊</div>
+<div class="nav-card-title">JOURNAL</div>
+<div class="nav-card-sub">Trade log, performance<br>charts & eval progress</div>
+</a>
+<a class='nav-card assistant' href='/jarvis_assistant'>
+<div class="nav-card-icon">🤖</div>
+<div class="nav-card-title">J.A.R.V.I.S.</div>
+<div class="nav-card-sub">Live voice assistant<br>& trade announcer</div>
+</a>
+</div>
+
+<div class="stats-row">
+<div class="stat">
+<div class="stat-l">5YR NET P&L</div>
+<div class="stat-v" style="color:var(--green)">$208,500</div>
+</div>
+<div class="stat">
+<div class="stat-l">WIN RATE</div>
+<div class="stat-v" style="color:var(--arc)">49.37%</div>
+</div>
+<div class="stat">
+<div class="stat-l">PROFIT FACTOR</div>
+<div class="stat-v" style="color:var(--yel)">1.54</div>
+</div>
+<div class="stat">
+<div class="stat-l">MAX DRAWDOWN</div>
+<div class="stat-v" style="color:var(--red)">$10,500</div>
+</div>
+</div>
+
+<button class="logout-btn" onclick="logout()">⬤ LOCK SYSTEM</button>
+
+</div>
+
+<script>
+// SET YOUR MASTER KEY HERE
+const MASTER_KEY = 'Mastersimon';
+
+function updateDots(){
+const val = document.getElementById('masterKeyInput').value;
+for(let i=0;i<6;i++){
+const dot = document.getElementById('dot'+i);
+dot.classList.toggle('filled', i < val.length);
+dot.classList.remove('error');
+}
+document.getElementById('masterKeyInput').classList.remove('error');
+document.getElementById('errorMsg').classList.remove('show');
+}
+
+function unlock(){
+const input = document.getElementById('masterKeyInput').value;
+if(input === MASTER_KEY){
+sessionStorage.setItem('jarvis_auth','true');
+document.getElementById('lockScreen').classList.add('hidden');
+document.getElementById('dashboard').classList.add('show');
+} else {
+// Wrong key
+document.getElementById('masterKeyInput').classList.add('error');
+document.getElementById('errorMsg').classList.add('show');
+for(let i=0;i<6;i++){
+document.getElementById('dot'+i).classList.add('error');
+document.getElementById('dot'+i).classList.remove('filled');
+}
+document.getElementById('masterKeyInput').value='';
+setTimeout(()=>{
+document.getElementById('masterKeyInput').classList.remove('error');
+for(let i=0;i<6;i++) document.getElementById('dot'+i).classList.remove('error');
+},1000);
+}
+}
+
+function logout(){
+sessionStorage.removeItem('jarvis_auth');
+document.getElementById('lockScreen').classList.remove('hidden');
+document.getElementById('dashboard').classList.remove('show');
+document.getElementById('masterKeyInput').value='';
+updateDots();
+}
+
+// CHECK IF ALREADY AUTHENTICATED
+if(sessionStorage.getItem('jarvis_auth')==='true'){
+document.getElementById('lockScreen').classList.add('hidden');
+document.getElementById('dashboard').classList.add('show');
+}
+
+// CLOCK
+function updateClock(){
+const t = new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+document.getElementById('dashClock').textContent = t;
+const parts=t.split(':');
+const h=parseInt(parts[0]),m=parseInt(parts[1]);
+const badge=document.getElementById('dashSession');
+if((h===8&&m>=30)||h===9||h===10||(h===11&&m===0)){badge.textContent='SESSION ACTIVE';badge.className='session-badge s-active';}
+else if(h<8||(h===8&&m<30)){badge.textContent='PRE-MARKET';badge.className='session-badge s-pre';}
+else{badge.textContent='SESSION CLOSED';badge.className='session-badge s-closed';}
+}
+setInterval(updateClock,1000);
+updateClock();
+</script>
+
+</body>
+</html>
