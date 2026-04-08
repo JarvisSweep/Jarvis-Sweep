@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jarvis Sweep — Compass</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0f;--sb:#0f0f17;--surf:#13131e;--surf2:#1a1a28;--bor:#1e1e2e;--bor2:#252538;--green:#00e676;--gdim:rgba(0,230,118,0.12);--red:#ff4560;--rdim:rgba(255,69,96,0.12);--yel:#ffb300;--blue:#448aff;--purp:#7c4dff;--t1:#e8e8f0;--t2:#8888aa;--t3:#555570}
+body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;display:flex;min-height:100vh;font-size:14px}
+.sb{width:220px;background:var(--sb);border-right:1px solid var(--bor);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.sb-logo{padding:22px 20px 18px;border-bottom:1px solid var(--bor)}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,#00e676,#00b248);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo-name{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.logo-tag{font-size:10px;color:#00e676;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-top:1px}
+.sb-nav{padding:14px 10px;flex:1}
+.nav-sec{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:1.2px;padding:8px 10px 5px}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;color:var(--t2);font-size:13px;font-weight:500;transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;font-family:'Inter',sans-serif}
+.nav-btn:hover{background:var(--surf2);color:var(--t1)}
+.nav-btn.on{background:var(--gdim);color:#00e676}
+.nav-ic{font-size:14px;width:18px;text-align:center}
+.sb-foot{padding:14px;border-top:1px solid var(--bor)}
+.acct-pill{background:var(--surf2);border:1px solid var(--bor2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.dot{width:8px;height:8px;background:#00e676;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.acct-n{font-size:12px;font-weight:600}
+.acct-s{font-size:10px;color:var(--t2);margin-top:1px}
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column}
+.topbar{height:56px;border-bottom:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:var(--sb);position:sticky;top:0;z-index:50}
+.pg-t{font-size:15px;font-weight:600}
+.tb-r{display:flex;align-items:center;gap:10px}
+.btn-p{background:#00e676;color:#000;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-p:hover{opacity:.85}
+.btn-g{background:var(--surf2);color:var(--t2);border:1px solid var(--bor2);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-g:hover{color:var(--t1)}
+.content{padding:24px 28px;flex:1}
+.sec{display:none}.sec.on{display:block}
+.srow{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.sbox{background:var(--surf);border:1px solid var(--bor);border-radius:12px;padding:16px}
+.slbl{font-size:11px;color:var(--t2);font-weight:500;margin-bottom:8px}
+.sval{font-size:20px;font-weight:700;letter-spacing:-.5px}
+.ssub{font-size:11px;color:var(--t3);margin-top:4px}
+.cg{color:#00e676}.cr{color:#ff4560}.cy{color:#ffb300}.cb{color:#448aff}
+.g73{display:grid;grid-template-columns:7fr 3fr;gap:16px;margin-bottom:16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:var(--surf);border:1px solid var(--bor);border-radius:14px;overflow:hidden}
+.ch{padding:16px 18px 0;display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:13px;font-weight:600}
+.cs{font-size:11px;color:var(--t2);margin-top:2px}
+.cb2{padding:16px 18px 18px}
+.hw{height:180px;position:relative}
+.hw2{height:160px;position:relative}
+.score-sec{display:flex;flex-direction:column;align-items:center;padding:14px 18px 18px}
+.score-ring{position:relative;width:120px;height:120px;margin-bottom:12px}
+.score-ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-n{font-size:28px;font-weight:700;color:#00e676;line-height:1}
+.score-l{font-size:10px;color:var(--t2);margin-top:2px}
+.mrow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bor);width:100%}
+.mrow:last-child{border-bottom:none}
+.mn{font-size:13px;color:var(--t2)}.mv{font-size:13px;font-weight:600}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--bor);white-space:nowrap}
+td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--bor);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.bw{background:rgba(0,230,118,.12);color:#00e676}
+.bl{background:rgba(255,69,96,.12);color:#ff4560}
+.bbe{background:rgba(255,179,0,.12);color:#ffb300}
+.blo{background:rgba(0,230,118,.12);color:#00e676}
+.bsh{background:rgba(255,69,96,.12);color:#ff4560}
+.bfi{background:rgba(68,138,255,.12);color:#448aff}
+.bco{background:rgba(124,77,255,.12);color:#7c4dff}
+.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.chd{font-size:10px;font-weight:600;color:var(--t3);text-align:center;padding:6px 0;text-transform:uppercase;letter-spacing:.5px}
+.cc{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid transparent;padding:4px;transition:all .15s}
+.cc:hover{border-color:var(--bor2)}
+.cc.emp{opacity:0}.cc.wk{opacity:.3}
+.cc.win{background:rgba(0,230,118,.12);border-color:rgba(0,230,118,.2)}
+.cc.loss{background:rgba(255,69,96,.12);border-color:rgba(255,69,96,.2)}
+.cc.be{background:rgba(255,179,0,.08);border-color:rgba(255,179,0,.2)}
+.cnum{font-size:12px;font-weight:600}
+.cpnl{font-size:9px;font-weight:600;margin-top:1px}
+.eitem{margin-bottom:18px}.eitem:last-child{margin-bottom:0}
+.erow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.en{font-size:12px;font-weight:600}
+.ev{font-size:12px;color:var(--t2)}
+.ev span{font-weight:600;color:var(--t1)}
+.btrack{height:5px;background:var(--surf2);border-radius:99px;overflow:hidden}
+.bfill{height:100%;border-radius:99px;transition:width .6s ease}
+.bg2{background:linear-gradient(90deg,#00e676,#00b248)}
+.br2{background:linear-gradient(90deg,#ff4560,#cc0030)}
+.by2{background:linear-gradient(90deg,#ffb300,#ff8f00)}
+.pi{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--bor)}
+.pi:last-child{border-bottom:none}
+.pi:hover{background:rgba(255,255,255,.015)}
+.pl{display:flex;align-items:center;gap:12px}
+.pico{width:36px;height:36px;border-radius:10px;background:rgba(0,230,118,.12);display:flex;align-items:center;justify-content:center;font-size:16px}
+.pfirm{font-size:13px;font-weight:600}
+.pdate{font-size:11px;color:var(--t2);margin-top:2px}
+.pamt{font-size:16px;font-weight:700;color:#00e676}
+.empty{padding:40px;text-align:center;color:var(--t3);font-size:13px}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center}
+.ov.on{display:flex}
+.modal{background:var(--surf);border:1px solid var(--bor2);border-radius:16px;width:500px;max-width:90vw;max-height:90vh;overflow-y:auto}
+.mh{padding:20px 22px 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.mt2{font-size:16px;font-weight:700}
+.mx{background:var(--surf2);border:none;color:var(--t2);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px}
+.mb{padding:0 22px 22px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ff{grid-column:1/-1}
+.fg .fl{display:flex;flex-direction:column;gap:6px}
+.flbl{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.8px}
+.fc{background:var(--surf2);border:1px solid var(--bor2);border-radius:8px;padding:9px 12px;color:var(--t1);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .15s;width:100%}
+.fc:focus{border-color:#00e676}
+.fsub{width:100%;background:#00e676;color:#000;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:16px}
+.fsub:hover{opacity:.85}
+.ftabs{display:flex;gap:4px;background:var(--surf2);border:1px solid var(--bor);border-radius:8px;padding:3px}
+.ftab{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:var(--t2);border:none;background:none;font-family:'Inter',sans-serif;transition:all .15s}
+.ftab.on{background:var(--surf);color:var(--t1);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.cnav{display:flex;align-items:center;gap:8px}
+.cbtn{background:var(--surf2);border:1px solid var(--bor2);color:var(--t2);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.cbtn:hover{color:var(--t1)}
+.mbox{background:var(--surf2);border-radius:10px;padding:14px;text-align:center}
+.mbl{font-size:11px;color:var(--t2);margin-bottom:6px}
+.mbv{font-size:18px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="sb">
+<div class="sb-logo">
+<div class="logo-row">
+<div class="logo-icon">🤖</div>
+<div><div class="logo-name">Jarvis Sweep</div><div class="logo-tag">Compass</div></div>
+</div>
+</div>
+<div class="sb-nav">
+<div class="nav-sec">Overview</div>
+<button class="nav-btn on" onclick="go('dashboard',this)"><span class="nav-ic">📊</span>Dashboard</button>
+<button class="nav-btn" onclick="go('tradelog',this)"><span class="nav-ic">📋</span>Trade Log</button>
+<button class="nav-btn" onclick="go('calendar',this)"><span class="nav-ic">📅</span>Calendar</button>
+<div class="nav-sec" style="margin-top:8px">Analytics</div>
+<button class="nav-btn" onclick="go('performance',this)"><span class="nav-ic">📈</span>Performance</button>
+<div class="nav-sec" style="margin-top:8px">Funding</div>
+<button class="nav-btn" onclick="go('evals',this)"><span class="nav-ic">🎯</span>Eval Progress</button>
+<button class="nav-btn" onclick="go('payouts',this)"><span class="nav-ic">💰</span>Payouts</button>
+</div>
+<div class="sb-foot">
+<div class="acct-pill">
+<div class="dot"></div>
+<div><div class="acct-n">Apex Eval</div><div class="acct-s">APEX5540130000001</div></div>
+</div>
+</div>
+</div>
+
+<div class="main">
+<div class="topbar">
+<div class="pg-t" id="ptitle">Dashboard</div>
+<div class="tb-r">
+<button class="btn-g" onclick="addPayout()">+ Payout</button>
+<button class="btn-p" onclick="openModal()">+ Add Trade</button>
+</div>
+</div>
+
+<div class="content">
+
+<div class="sec on" id="dashboard">
+<div class="srow">
+<div class="sbox"><div class="slbl">Net P&L</div><div class="sval cg" id="s1">$0.00</div><div class="ssub">All time</div></div>
+<div class="sbox"><div class="slbl">Win Rate</div><div class="sval cb" id="s2">0%</div><div class="ssub">Excl. breakevens</div></div>
+<div class="sbox"><div class="slbl">Trades</div><div class="sval" id="s3">0</div><div class="ssub">Total</div></div>
+<div class="sbox"><div class="slbl">Profit Factor</div><div class="sval cy" id="s4">—</div><div class="ssub">Gross / Loss</div></div>
+<div class="sbox"><div class="slbl">Max Drawdown</div><div class="sval cr" id="s5">$0</div><div class="ssub">Largest decline</div></div>
+<div class="sbox"><div class="slbl">Avg Win</div><div class="sval cg" id="s6">$0</div><div class="ssub">Per win</div></div>
+</div>
+<div class="g73">
+<div class="card">
+<div class="ch"><div><div class="ct">Equity Curve</div><div class="cs">Cumulative P&L over time</div></div></div>
+<div class="cb2"><div class="hw"><canvas id="eqC"></canvas></div></div>
+</div>
+<div class="card">
+<div class="ch"><div class="ct">Compass Score</div></div>
+<div class="score-sec">
+<div class="score-ring">
+<canvas id="scC" width="120" height="120"></canvas>
+<div class="score-ctr"><div class="score-n" id="scN">—</div><div class="score-l">SCORE</div></div>
+</div>
+<div style="width:100%">
+<div class="mrow"><span class="mn">Win Rate</span><span class="mv cg" id="m1">0%</span></div>
+<div class="mrow"><span class="mn">Profit Factor</span><span class="mv" id="m2">—</span></div>
+<div class="mrow"><span class="mn">Consistency</span><span class="mv cb" id="m3">—</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="g2">
+<div class="card">
+<div class="ch"><div class="ct">Monthly P&L</div></div>
+<div class="cb2"><div class="hw2"><canvas id="moC"></canvas></div></div>
+</div>
+<div class="card">
+<div class="ch"><div class="ct">Recent Trades</div></div>
+<div class="tw">
+<table><thead><tr><th>Date</th><th>Side</th><th>Result</th><th>P&L</th></tr></thead>
+<tbody id="recB"><tr><td colspan="4" class="empty">No trades yet</td></tr></tbody></table>
+</div>
+</div>
+</div>
+</div>
+
+<div class="sec" id="tradelog">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<div style="font-size:15px;font-weight:600">Trade Log</div>
+<div class="ftabs">
+<button class="ftab on" onclick="filt('all',this)">All</button>
+<button class="ftab" onclick="filt('win',this)">Wins</button>
+<button class="ftab" onclick="filt('loss',this)">Losses</button>
+<button class="ftab" onclick="filt('be',this)">BE</button>
+<button class="ftab" onclick="filt('long',this)">Long</button>
+<button class="ftab" onclick="filt('short',this)">Short</button>
+</div>
+</div>
+<div class="card">
+<div class="tw">
+<table>
+<thead><tr><th>Date</th><th>Time</th><th>Side</th><th>Type</th><th>Entry</th><th>SL</th><th>TP</th><th>Exit</th><th>Result</th><th>P&L</th><th>Notes</th></tr></thead>
+<tbody id="logB"><tr><td colspan="11" class="empty">No trades yet</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="sec" id="calendar">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<div style="font-size:15px;font-weight:600" id="calT">April 2026</div>
+<div class="cnav">
+<button class="cbtn" onclick="chMo(-1)">&#8249;</button>
+<button class="cbtn" onclick="chMo(1)">&#8250;</button>
+</div>
+</div>
+<div class="card" style="padding:16px">
+<div class="cgrid" style="margin-bottom:8px">
+<div class="chd">Mon</div><div class="chd">Tue</div><div class="chd">Wed</div>
+<div class="chd">Thu</div><div class="chd">Fri</div><div class="chd">Sat</div><div class="chd">Sun</div>
+</div>
+<div class="cgrid" id="calB"></div>
+</div>
+</div>
+
+<div class="sec" id="performance">
+<div style="font-size:15px;font-weight:600;margin-bottom:16px">Performance</div>
+<div class="g2">
+<div class="card"><div class="ch"><div class="ct">Win / Loss / BE</div></div><div class="cb2"><div class="hw"><canvas id="dC"></canvas></div></div></div>
+<div class="card"><div class="ch"><div class="ct">Long vs Short</div></div><div class="cb2"><div class="hw"><canvas id="lsC"></canvas></div></div></div>
+</div>
+<div class="g2">
+<div class="card"><div class="ch"><div class="ct">Win Rate by Day</div></div><div class="cb2"><div class="hw2"><canvas id="dwC"></canvas></div></div></div>
+<div class="card"><div class="ch"><div class="ct">P&L Distribution</div></div><div class="cb2"><div class="hw2"><canvas id="pdC"></canvas></div></div></div>
+</div>
+</div>
+
+<div class="sec" id="evals">
+<div style="font-size:15px;font-weight:600;margin-bottom:16px">Eval Progress</div>
+<div class="g2" style="margin-bottom:16px">
+<div class="sbox"><div class="slbl">Profit Progress</div><div class="sval cg" id="ep1">$0 / $3,000</div><div class="ssub">Apex 50K target</div></div>
+<div class="sbox"><div class="slbl">Trading Days</div><div class="sval" id="ep2">0 / 5</div><div class="ssub">Minimum required</div></div>
+</div>
+<div class="card">
+<div style="padding:18px">
+<div class="eitem">
+<div class="erow"><div class="en">Profit Target</div><div class="ev"><span id="eb1v">$0</span> / $3,000</div></div>
+<div class="btrack"><div class="bfill bg2" id="eb1" style="width:0%"></div></div>
+</div>
+<div class="eitem">
+<div class="erow"><div class="en">Drawdown Used</div><div class="ev"><span id="eb2v">$0</span> / $2,500</div></div>
+<div class="btrack"><div class="bfill br2" id="eb2" style="width:0%"></div></div>
+</div>
+<div class="eitem">
+<div class="erow"><div class="en">Trading Days</div><div class="ev"><span id="eb3v">0</span> / 5 minimum</div></div>
+<div class="btrack"><div class="bfill by2" id="eb3" style="width:0%"></div></div>
+</div>
+</div>
+<div class="g3" style="padding:0 18px 18px;margin-bottom:0">
+<div class="mbox"><div class="mbl">Win Rate</div><div class="mbv cb" id="evW">0%</div></div>
+<div class="mbox"><div class="mbl">Best Day</div><div class="mbv cg" id="evB">$0</div></div>
+<div class="mbox"><div class="mbl">Status</div><div class="mbv cy" id="evS">On Track</div></div>
+</div>
+</div>
+</div>
+
+<div class="sec" id="payouts">
+<div style="font-size:15px;font-weight:600;margin-bottom:16px">Payouts</div>
+<div class="g2" style="margin-bottom:16px">
+<div class="sbox"><div class="slbl">Total Received</div><div class="sval cg" id="pt">$0.00</div></div>
+<div class="sbox"><div class="slbl">Pending</div><div class="sval cy" id="pp">$0.00</div></div>
+</div>
+<div class="card" id="pL"><div class="empty">No payouts yet — keep trading</div></div>
+</div>
+
+</div>
+</div>
+
+<div class="ov" id="modal">
+<div class="modal">
+<div class="mh">
+<div class="mt2">Log Trade</div>
+<button class="mx" onclick="closeModal()">x</button>
+</div>
+<div class="mb">
+<div class="fg">
+<div class="fl"><label class="flbl">Date</label><input type="date" class="fc" id="fd"></div>
+<div class="fl"><label class="flbl">Time</label><input type="time" class="fc" id="ft"></div>
+<div class="fl"><label class="flbl">Side</label><select class="fc" id="fsi"><option value="long">Long</option><option value="short">Short</option></select></div>
+<div class="fl"><label class="flbl">Type</label><select class="fc" id="fty"><option value="first">First Entry</option><option value="continuation">Continuation</option></select></div>
+<div class="fl"><label class="flbl">Entry</label><input type="number" class="fc" id="fen" placeholder="0.00"></div>
+<div class="fl"><label class="flbl">Exit</label><input type="number" class="fc" id="fex" placeholder="0.00"></div>
+<div class="fl"><label class="flbl">Stop Loss</label><input type="number" class="fc" id="fsl" placeholder="0.00"></div>
+<div class="fl"><label class="flbl">Take Profit</label><input type="number" class="fc" id="ftp" placeholder="0.00"></div>
+<div class="fl"><label class="flbl">Result</label><select class="fc" id="fr"><option value="win">Win</option><option value="loss">Loss</option><option value="be">Breakeven</option></select></div>
+<div class="fl"><label class="flbl">P&L ($)</label><input type="number" class="fc" id="fp" placeholder="0.00"></div>
+<div class="fl ff"><label class="flbl">Notes</label><input type="text" class="fc" id="fn" placeholder="Optional notes..."></div>
+</div>
+<button class="fsub" onclick="addTrade()">Log Trade</button>
+</div>
+</div>
+</div>
+
+<script>
+let T=JSON.parse(localStorage.getItem('js_t')||'[]');
+let P=JSON.parse(localStorage.getItem('js_p')||'[]');
+let calMo=new Date();let af='all';let CH={};
+const GC='rgba(255,255,255,0.04)',TC='#555570';
+
+function go(tab,el){
+document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+document.querySelectorAll('.nav-btn').forEach(n=>n.classList.remove('on'));
+document.getElementById(tab).classList.add('on');el.classList.add('on');
+const N={dashboard:'Dashboard',tradelog:'Trade Log',calendar:'Calendar',performance:'Performance',evals:'Eval Progress',payouts:'Payouts'};
+document.getElementById('ptitle').textContent=N[tab]||tab;
+if(tab==='calendar')renderCal();
+if(tab==='performance')renderPerf();
+}
+
+function openModal(){document.getElementById('fd').value=new Date().toISOString().split('T')[0];document.getElementById('modal').classList.add('on');}
+function closeModal(){document.getElementById('modal').classList.remove('on');}
+
+function addPayout(){
+const a=prompt('Payout amount ($):');if(!a)return;
+const f=prompt('Firm:')||'Apex';
+const s=(prompt('Status (paid/pending):')||'pending').toLowerCase();
+P.push({amount:parseFloat(a),firm:f,status:s,date:new Date().toISOString().split('T')[0]});
+localStorage.setItem('js_p',JSON.stringify(P));renderPayouts();
+}
+
+function addTrade(){
+const t={id:Date.now(),date:document.getElementById('fd').value,time:document.getElementById('ft').value,side:document.getElementById('fsi').value,type:document.getElementById('fty').value,entry:parseFloat(document.getElementById('fen').value)||0,exit:parseFloat(document.getElementById('fex').value)||0,sl:parseFloat(document.getElementById('fsl').value)||0,tp:parseFloat(document.getElementById('ftp').value)||0,result:document.getElementById('fr').value,pnl:parseFloat(document.getElementById('fp').value)||0,notes:document.getElementById('fn').value};
+T.push(t);T.sort((a,b)=>new Date(b.date)-new Date(a.date));
+localStorage.setItem('js_t',JSON.stringify(T));closeModal();updateAll();
+}
+
+function calcS(data){
+const W=data.filter(t=>t.result==='win'),L=data.filter(t=>t.result==='loss'),B=data.filter(t=>t.result==='be');
+const tp=data.reduce((s,t)=>s+t.pnl,0),wp=W.reduce((s,t)=>s+t.pnl,0),lp=Math.abs(L.reduce((s,t)=>s+t.pnl,0));
+const wr=(W.length+L.length)>0?W.length/(W.length+L.length)*100:0;
+const pf=lp>0?wp/lp:wp>0?99:0,aw=W.length>0?wp/W.length:0;
+let pk=0,rn=0,mdd=0;
+[...data].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(t=>{rn+=t.pnl;if(rn>pk)pk=rn;const d=pk-rn;if(d>mdd)mdd=d;});
+return{tp,wr,n:data.length,pf,mdd,aw,wins:W.length,losses:L.length,bes:B.length};
+}
+
+function upStats(){
+const s=calcS(T);
+document.getElementById('s1').textContent=(s.tp>=0?'+ ':'')+' $'+s.tp.toFixed(2);
+document.getElementById('s1').className='sval '+(s.tp>=0?'cg':'cr');
+document.getElementById('s2').textContent=s.wr.toFixed(1)+'%';
+document.getElementById('s3').textContent=s.n;
+document.getElementById('s4').textContent=s.pf>0?s.pf.toFixed(2):'--';
+document.getElementById('s5').textContent='-$'+s.mdd.toFixed(0);
+document.getElementById('s6').textContent='+$'+s.aw.toFixed(0);
+document.getElementById('m1').textContent=s.wr.toFixed(1)+'%';
+document.getElementById('m2').textContent=s.pf>0?s.pf.toFixed(2):'--';
+document.getElementById('m3').textContent=s.n>=5?(s.wr>45?'Good':'Building'):'Too early';
+const sc=s.n>0?Math.min(99,Math.round(s.wr*0.5+Math.min(s.pf*15,40)+Math.min(s.n,10))):0;
+document.getElementById('scN').textContent=sc>0?sc:'--';
+renderScore(sc);
+}
+
+let scInst;
+function renderScore(v){
+if(scInst)scInst.destroy();
+scInst=new Chart(document.getElementById('scC'),{type:'doughnut',data:{datasets:[{data:[v,100-v],backgroundColor:['#00e676','rgba(255,255,255,0.05)'],borderWidth:0,circumference:270,rotation:225}]},options:{responsive:false,cutout:'80%',plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+}
+
+function renderEQ(){
+const s=[...T].sort((a,b)=>new Date(a.date)-new Date(b.date));
+let rn=0;const d=[0],l=[''];
+s.forEach(t=>{rn+=t.pnl;d.push(rn);l.push(t.date);});
+if(CH.eq)CH.eq.destroy();
+CH.eq=new Chart(document.getElementById('eqC'),{type:'line',data:{labels:l,datasets:[{data:d,borderColor:'#00e676',backgroundColor:(ctx)=>{const g=ctx.chart.ctx.createLinearGradient(0,0,0,180);g.addColorStop(0,'rgba(0,230,118,0.15)');g.addColorStop(1,'rgba(0,230,118,0)');return g;},fill:true,borderWidth:1.5,pointRadius:0,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{ticks:{color:TC,font:{size:11},callback:v=>'$'+v},grid:{color:GC},border:{display:false}}}}});
+}
+
+function renderMo(){
+const mo={};T.forEach(t=>{const k=t.date.slice(0,7);mo[k]=(mo[k]||0)+t.pnl;});
+const ks=Object.keys(mo).sort(),vs=ks.map(k=>mo[k]);
+if(CH.mo)CH.mo.destroy();
+CH.mo=new Chart(document.getElementById('moC'),{type:'bar',data:{labels:ks.map(k=>k.slice(5)),datasets:[{data:vs,backgroundColor:vs.map(v=>v>=0?'rgba(0,230,118,0.7)':'rgba(255,69,96,0.7)'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:TC,font:{size:11}},grid:{display:false},border:{display:false}},y:{ticks:{color:TC,font:{size:11},callback:v=>'$'+v},grid:{color:GC},border:{display:false}}}}});
+}
+
+function renderRec(){
+const b=document.getElementById('recB'),r=T.slice(0,6);
+if(!r.length){b.innerHTML='<tr><td colspan="4" class="empty">No trades yet</td></tr>';return;}
+b.innerHTML=r.map(t=>`<tr><td style="color:var(--t2)">${t.date}</td><td><span class="badge ${t.side==='long'?'blo':'bsh'}">${t.side==='long'?'up Long':'down Short'}</span></td><td><span class="badge ${t.result==='win'?'bw':t.result==='loss'?'bl':'bbe'}">${t.result.toUpperCase()}</span></td><td style="font-weight:600;color:${t.pnl>=0?'#00e676':'#ff4560'}">${t.pnl>=0?'+':''}$${t.pnl.toFixed(2)}</td></tr>`).join('');
+}
+
+function renderLog(){
+const f=af==='all'?T:af==='long'||af==='short'?T.filter(t=>t.side===af):T.filter(t=>t.result===af);
+const b=document.getElementById('logB');
+if(!f.length){b.innerHTML='<tr><td colspan="11" class="empty">No trades found</td></tr>';return;}
+b.innerHTML=f.map(t=>`<tr><td style="color:var(--t2)">${t.date}</td><td style="color:var(--t2)">${t.time||'--'}</td><td><span class="badge ${t.side==='long'?'blo':'bsh'}">${t.side}</span></td><td><span class="badge ${t.type==='first'?'bfi':'bco'}">${t.type==='first'?'First':'Cont.'}</span></td><td>${t.entry||'--'}</td><td style="color:#ff4560">${t.sl||'--'}</td><td style="color:#00e676">${t.tp||'--'}</td><td>${t.exit||'--'}</td><td><span class="badge ${t.result==='win'?'bw':t.result==='loss'?'bl':'bbe'}">${t.result.toUpperCase()}</span></td><td style="font-weight:600;color:${t.pnl>=0?'#00e676':'#ff4560'}">${t.pnl>=0?'+':''}$${t.pnl.toFixed(2)}</td><td style="color:var(--t2)">${t.notes||'--'}</td></tr>`).join('');
+}
+
+function filt(f,el){af=f;document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('on'));el.classList.add('on');renderLog();}
+
+function renderCal(){
+const y=calMo.getFullYear(),m=calMo.getMonth();
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+document.getElementById('calT').textContent=MN[m]+' '+y;
+const fd=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+const dm={};T.forEach(t=>{const p=y+'-'+String(m+1).padStart(2,'0');if(t.date.startsWith(p))dm[t.date]=(dm[t.date]||0)+t.pnl;});
+let h='';
+for(let i=0;i<fd;i++)h+='<div class="cc emp"></div>';
+for(let d=1;d<=days;d++){
+const date=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+const pnl=dm[date];const dow=new Date(y,m,d).getDay();const wk=dow===0||dow===6;
+let cls='cc'+(wk?' wk':'');let ph='';
+if(pnl!==undefined){cls+=pnl>0?' win':pnl<0?' loss':' be';ph='<div class="cpnl" style="color:'+(pnl>0?'#00e676':pnl<0?'#ff4560':'#ffb300')+'">'+(pnl>0?'+':'')+'$'+Math.abs(pnl).toFixed(0)+'</div>';}
+h+='<div class="'+cls+'"><div class="cnum">'+d+'</div>'+ph+'</div>';
+}
+document.getElementById('calB').innerHTML=h;
+}
+
+function chMo(d){calMo.setMonth(calMo.getMonth()+d);renderCal();}
+
+function renderPerf(){
+const s=calcS(T);
+const lo=T.filter(t=>t.side==='long'),sh=T.filter(t=>t.side==='short');
+const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:TC},grid:{display:false},border:{display:false}},y:{ticks:{color:TC},grid:{color:GC},border:{display:false}}}};
+if(CH.d)CH.d.destroy();
+CH.d=new Chart(document.getElementById('dC'),{type:'doughnut',data:{labels:['Wins','Losses','BE'],datasets:[{data:[s.wins,s.losses,s.bes],backgroundColor:['rgba(0,230,118,0.85)','rgba(255,69,96,0.85)','rgba(255,179,0,0.6)'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:true,position:'bottom',labels:{color:TC,padding:14,font:{size:11}}}}}});
+const lW=lo.filter(t=>t.result!=='be').length>0?lo.filter(t=>t.result==='win').length/lo.filter(t=>t.result!=='be').length*100:0;
+const sW=sh.filter(t=>t.result!=='be').length>0?sh.filter(t=>t.result==='win').length/sh.filter(t=>t.result!=='be').length*100:0;
+if(CH.ls)CH.ls.destroy();
+CH.ls=new Chart(document.getElementById('lsC'),{type:'bar',data:{labels:['Long','Short'],datasets:[{label:'Trades',data:[lo.length,sh.length],backgroundColor:['rgba(0,230,118,0.6)','rgba(255,69,96,0.6)'],borderRadius:6},{label:'Win %',data:[lW,sW],backgroundColor:['rgba(0,230,118,0.25)','rgba(255,69,96,0.25)'],borderRadius:6}]},options:{...base,plugins:{legend:{display:true,labels:{color:TC,font:{size:11}}}}}});
+const dw=[0,0,0,0,0],dt=[0,0,0,0,0];
+T.forEach(t=>{const d=new Date(t.date).getDay();const i=d===0?4:d-1;if(i>=0&&i<5){dt[i]++;if(t.result==='win')dw[i]++;}});
+if(CH.dw)CH.dw.destroy();
+CH.dw=new Chart(document.getElementById('dwC'),{type:'bar',data:{labels:['Mon','Tue','Wed','Thu','Fri'],datasets:[{data:dt.map((t,i)=>t>0?dw[i]/t*100:0),backgroundColor:'rgba(68,138,255,0.65)',borderRadius:6}]},options:{...base,scales:{x:{ticks:{color:TC},grid:{display:false},border:{display:false}},y:{max:100,ticks:{color:TC,callback:v=>v+'%'},grid:{color:GC},border:{display:false}}}}});
+const bins=[0,0,0,0,0,0];
+T.forEach(t=>{const p=t.pnl;if(p<-500)bins[0]++;else if(p<-250)bins[1]++;else if(p<0)bins[2]++;else if(p<250)bins[3]++;else if(p<500)bins[4]++;else bins[5]++;});
+if(CH.pd)CH.pd.destroy();
+CH.pd=new Chart(document.getElementById('pdC'),{type:'bar',data:{labels:['<-$500','-$500 to -$250','-$250 to $0','$0 to $250','$250 to $500','>$500'],datasets:[{data:bins,backgroundColor:['rgba(255,69,96,0.8)','rgba(255,69,96,0.5)','rgba(255,69,96,0.3)','rgba(0,230,118,0.3)','rgba(0,230,118,0.5)','rgba(0,230,118,0.8)'],borderRadius:5}]},options:{...base,scales:{x:{ticks:{color:TC,font:{size:9},maxRotation:30},grid:{display:false},border:{display:false}},y:{ticks:{color:TC},grid:{color:GC},border:{display:false}}}}});
+}
+
+function upEval(){
+const tp=Math.max(0,T.reduce((s,t)=>s+t.pnl,0));
+const days=new Set(T.map(t=>t.date)).size;
+const W=T.filter(t=>t.result==='win').length,nB=T.filter(t=>t.result!=='be').length;
+const wr=nB>0?W/nB*100:0;
+const best=T.length>0?Math.max(...T.map(t=>t.pnl)):0;
+let pk=0,rn=0,mdd=0;
+[...T].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(t=>{rn+=t.pnl;if(rn>pk)pk=rn;const d=pk-rn;if(d>mdd)mdd=d;});
+document.getElementById('ep1').textContent='$'+tp.toFixed(0)+' / $3,000';
+document.getElementById('ep2').textContent=days+' / 5';
+document.getElementById('eb1v').textContent='$'+tp.toFixed(0);
+document.getElementById('eb1').style.width=Math.min(100,tp/30)+'%';
+document.getElementById('eb2v').textContent='$'+mdd.toFixed(0);
+document.getElementById('eb2').style.width=Math.min(100,mdd/25)+'%';
+document.getElementById('eb3v').textContent=days;
+document.getElementById('eb3').style.width=Math.min(100,days/5*100)+'%';
+document.getElementById('evW').textContent=wr.toFixed(1)+'%';
+document.getElementById('evB').textContent='+$'+best.toFixed(0);
+document.getElementById('evS').textContent=tp>=3000?'PASSED!':mdd>=2000?'Danger':'On Track';
+}
+
+function renderPayouts(){
+const tot=P.filter(p=>p.status==='paid').reduce((s,p)=>s+p.amount,0);
+const pend=P.filter(p=>p.status==='pending').reduce((s,p)=>s+p.amount,0);
+document.getElementById('pt').textContent='+$'+tot.toFixed(2);
+document.getElementById('pp').textContent='$'+pend.toFixed(2);
+const l=document.getElementById('pL');
+if(!P.length){l.innerHTML='<div class="empty">No payouts yet</div>';return;}
+l.innerHTML=[...P].reverse().map(p=>'<div class="pi"><div class="pl"><div class="pico">💰</div><div><div class="pfirm">'+p.firm+'</div><div class="pdate">'+p.date+'</div></div></div><div style="display:flex;align-items:center;gap:12px"><div class="pamt">+$'+p.amount.toFixed(2)+'</div><span class="badge '+(p.status==='paid'?'bw':'bbe')+'">'+p.status.toUpperCase()+'</span></div></div>').join('');
+}
+
+function updateAll(){upStats();renderEQ();renderMo();renderRec();renderLog();renderPayouts();upEval();}
+updateAll();renderCal();renderScore(0);
+</script>
+
+</body>
+</html>
