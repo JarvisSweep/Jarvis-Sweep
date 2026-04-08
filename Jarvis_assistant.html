@@ -4,6 +4,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jarvis Sweep">
+<meta name="theme-color" content="#00d4ff">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>J.A.R.V.I.S. — Trading Assistant</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -470,6 +476,16 @@ document.getElementById('pnlBar').style.width='0%';
 },3000);
 addMsg('J.A.R.V.I.S.',`Excellent, Sir. Take profit has been reached. The position has been closed for a gain of $1,000. Session P&L is now +$${sessionPnlVal}. Well done for trusting the algorithm. The trading window remains open but our session limit has been reached. I suggest we power down the monitors.`);
 }
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Jarvis SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
 </script>
 
 </body>
