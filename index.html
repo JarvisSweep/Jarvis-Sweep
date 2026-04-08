@@ -4,7 +4,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "a1078a11-d1fd-47e7-8532-1c30bd802da9",
+      safari_web_id: "web.onesignal.auto.4efa60d1-07b1-4ba2-89e8-693e25ede623",
+      notifyButton: {
+        enable: true,
+      },
+    });
+  });
+</script>  <link rel="manifest" href="/manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Jarvis Sweep">
