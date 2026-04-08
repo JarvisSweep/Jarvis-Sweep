@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S. — Trading Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#020408;--panel:#050d15;--border:#0a2a3a;--border2:#0d3a50;
+--arc:#00d4ff;--arc2:#0099cc;--arc-dim:rgba(0,212,255,0.08);
+--green:#00ff88;--red:#ff3355;--yel:#ffcc00;--white:#e8f4ff;
+--t2:#5a8fa8;--t3:#2a4a5a;
+--font:'Rajdhani',sans-serif;--mono:'Share Tech Mono',monospace;
+}
+body{background:var(--bg);color:var(--white);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:50px 50px;animation:gridMove 20s linear infinite;}
+@keyframes gridMove{0%{background-position:0 0}100%{background-position:50px 50px}}
+body::after{content:'';position:fixed;inset:0;background:linear-gradient(transparent 50%,rgba(0,0,0,0.03) 50%);background-size:100% 4px;pointer-events:none;z-index:1000;}
+.container{width:100%;max-width:900px;padding:20px;display:flex;flex-direction:column;gap:16px;position:relative;z-index:10;}
+.header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border2);padding-bottom:16px;}
+.logo-wrap{display:flex;align-items:center;gap:16px}
+.arc-ring{width:60px;height:60px;position:relative;display:flex;align-items:center;justify-content:center;}
+.arc-ring svg{position:absolute;inset:0;animation:spin 8s linear infinite}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.arc-ring svg.counter{animation:spinr 12s linear infinite}
+@keyframes spinr{0%{transform:rotate(0deg)}100%{transform:rotate(-360deg)}}
+.arc-core{width:36px;height:36px;background:radial-gradient(circle,var(--arc),var(--arc2));border-radius:50%;box-shadow:0 0 20px var(--arc),0 0 40px rgba(0,212,255,0.3);animation:pulse-core 2s ease-in-out infinite;}
+@keyframes pulse-core{0%,100%{box-shadow:0 0 20px var(--arc),0 0 40px rgba(0,212,255,0.3)}50%{box-shadow:0 0 30px var(--arc),0 0 60px rgba(0,212,255,0.5)}}
+.logo-name{font-size:28px;font-weight:700;letter-spacing:6px;color:var(--arc);text-shadow:0 0 20px rgba(0,212,255,0.5);}
+.logo-sub{font-size:11px;color:var(--t2);letter-spacing:3px;font-family:var(--mono)}
+.status-wrap{display:flex;align-items:center;gap:12px}
+.status-dot{width:10px;height:10px;border-radius:50%;animation:blink 1.5s infinite}
+.status-dot.online{background:var(--green);box-shadow:0 0 10px var(--green)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.status-txt{font-size:12px;font-family:var(--mono);color:var(--t2);letter-spacing:2px}
+.voice-toggle{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 16px;cursor:pointer;transition:all 0.2s;}
+.voice-toggle:hover{border-color:var(--arc)}
+.toggle-switch{width:36px;height:20px;background:var(--border2);border-radius:99px;position:relative;transition:background 0.2s;}
+.toggle-switch.on{background:var(--arc)}
+.toggle-knob{width:14px;height:14px;background:white;border-radius:50%;position:absolute;top:3px;left:3px;transition:transform 0.2s;}
+.toggle-switch.on .toggle-knob{transform:translateX(16px)}
+.toggle-lbl{font-size:11px;color:var(--t2);letter-spacing:1px;font-family:var(--mono)}
+.time-bar{display:flex;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 20px;}
+.time-el{display:flex;flex-direction:column;gap:2px;align-items:center}
+.time-lbl{font-size:10px;color:var(--t3);letter-spacing:2px;font-family:var(--mono)}
+.time-val{font-size:18px;font-weight:600;font-family:var(--mono);color:var(--arc)}
+.time-sep{color:var(--t3);font-size:20px}
+.session-status{padding:6px 16px;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:2px;font-family:var(--mono);}
+.session-active{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.3)}
+.session-closed{background:rgba(90,143,168,0.1);color:var(--t2);border:1px solid var(--border)}
+.session-premarket{background:rgba(255,204,0,0.1);color:var(--yel);border:1px solid rgba(255,204,0,0.3)}
+.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--arc),transparent);}
+.panel-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-size:12px;letter-spacing:3px;color:var(--t2);font-family:var(--mono)}
+.panel-body{padding:18px}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric{background:rgba(0,212,255,0.03);border:1px solid var(--border);border-radius:8px;padding:12px;}
+.metric-l{font-size:10px;color:var(--t3);letter-spacing:2px;font-family:var(--mono);margin-bottom:6px}
+.metric-v{font-size:20px;font-weight:700;font-family:var(--mono)}
+.metric-v.pos{color:var(--green)}.metric-v.neg{color:var(--red)}.metric-v.neu{color:var(--arc)}.metric-v.yel{color:var(--yel)}
+.pnl-bar-wrap{margin-top:14px}
+.pnl-bar-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--t3);font-family:var(--mono);margin-bottom:6px;}
+.pnl-bar-track{height:6px;background:var(--border);border-radius:99px;overflow:hidden}
+.pnl-bar-fill{height:100%;border-radius:99px;transition:width 0.5s ease;background:linear-gradient(90deg,var(--arc),var(--green));}
+.pnl-bar-fill.neg{background:linear-gradient(90deg,var(--red),#ff6688)}
+.chat-panel{grid-column:1/-1}
+.chat-body{padding:0;max-height:240px;overflow-y:auto}
+.chat-body::-webkit-scrollbar{width:4px}
+.chat-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.msg{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;animation:fadeIn 0.4s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg:last-child{border-bottom:none}
+.msg-icon{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);}
+.msg-sender{font-size:10px;color:var(--t2);letter-spacing:2px;font-family:var(--mono);margin-bottom:4px}
+.msg-text{font-size:14px;line-height:1.5;color:var(--white)}
+.msg-text.arc{color:var(--arc)}
+.msg-time{font-size:10px;color:var(--t3);font-family:var(--mono);margin-top:4px}
+.speaking-wrap{display:none;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid var(--border);}
+.speaking-wrap.active{display:flex}
+.wave{display:flex;gap:3px;align-items:center}
+.bar{width:3px;background:var(--arc);border-radius:2px;animation:wave 0.8s ease-in-out infinite;}
+.bar:nth-child(1){height:8px;animation-delay:0s}.bar:nth-child(2){height:16px;animation-delay:0.1s}.bar:nth-child(3){height:24px;animation-delay:0.2s}.bar:nth-child(4){height:16px;animation-delay:0.3s}.bar:nth-child(5){height:8px;animation-delay:0.4s}
+@keyframes wave{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1.2)}}
+.speaking-txt{font-size:11px;color:var(--arc);letter-spacing:2px;font-family:var(--mono)}
+.input-row{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--border);}
+.trade-input{flex:1;background:rgba(0,212,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--white);font-family:var(--mono);font-size:13px;outline:none;transition:border-color 0.2s;}
+.trade-input:focus{border-color:var(--arc)}
+.trade-input::placeholder{color:var(--t3)}
+.send-btn{background:var(--arc);color:#000;border:none;border-radius:8px;padding:10px 20px;font-family:var(--font);font-weight:700;font-size:13px;cursor:pointer;letter-spacing:1px;}
+.send-btn:hover{opacity:0.85}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.ctrl-btn{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 8px;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--font);}
+.ctrl-btn:hover{border-color:var(--arc);background:var(--arc-dim)}
+.ctrl-icon{font-size:20px}
+.ctrl-lbl{font-size:10px;color:var(--t2);letter-spacing:1px;text-align:center}
+.bottom-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat-mini{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.stat-mini-l{font-size:10px;color:var(--t3);letter-spacing:1px;font-family:var(--mono);margin-bottom:4px}
+.stat-mini-v{font-size:16px;font-weight:700;font-family:var(--mono)}
+
+/* API KEY INPUT */
+.api-setup{background:var(–panel);border:1px solid var(–yel);border-radius:12px;padding:20px;margin-bottom:8px;}
+.api-title{font-size:12px;color:var(–yel);letter-spacing:2px;font-family:var(–mono);margin-bottom:10px;}
+.api-row{display:flex;gap:10px;}
+.api-input{flex:1;background:rgba(255,204,0,0.05);border:1px solid rgba(255,204,0,0.3);border-radius:8px;padding:10px 14px;color:var(–white);font-family:var(–mono);font-size:13px;outline:none;}
+.api-input:focus{border-color:var(–yel)}
+.api-btn{background:var(–yel);color:#000;border:none;border-radius:8px;padding:10px 20px;font-family:var(–font);font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;}
+
+.live-badge{font-size:10px;font-family:var(–mono);padding:4px 10px;border-radius:4px;background:rgba(0,255,136,0.1);color:var(–green);border:1px solid rgba(0,255,136,0.3);display:none;}
+.live-badge.active{display:block}
+</style>
+
+</head>
+<body>
+<div class="container">
+
+<!-- API SETUP -->
+
+<div class="api-setup" id="apiSetup">
+<div class="api-title">⚡ ENTER YOUR JSONBIN X-ACCESS-KEY TO ACTIVATE LIVE TRADE DETECTION</div>
+<div class="api-row">
+<input type="password" class="api-input" id="apiKeyInput" placeholder="Paste your X-Access-Key here...">
+<button class="api-btn" onclick="activateLive()">ACTIVATE</button>
+</div>
+</div>
+
+<!-- HEADER -->
+
+<div class="header">
+<div class="logo-wrap">
+<div class="arc-ring">
+<svg viewBox="0 0 60 60" fill="none">
+<circle cx="30" cy="30" r="27" stroke="rgba(0,212,255,0.3)" stroke-width="1"/>
+<path d="M30 3 A27 27 0 0 1 57 30" stroke="#00d4ff" stroke-width="2" stroke-linecap="round"/>
+<path d="M30 57 A27 27 0 0 1 3 30" stroke="rgba(0,212,255,0.4)" stroke-width="1" stroke-linecap="round"/>
+</svg>
+<svg class="counter" viewBox="0 0 60 60" fill="none">
+<circle cx="30" cy="30" r="20" stroke="rgba(0,212,255,0.15)" stroke-width="1"/>
+<path d="M30 10 A20 20 0 0 1 50 30" stroke="rgba(0,212,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
+<div class="arc-core"></div>
+</div>
+<div>
+<div class="logo-name">J.A.R.V.I.S.</div>
+<div class="logo-sub">Just A Rather Very Intelligent System</div>
+</div>
+</div>
+<div class="status-wrap">
+<div class="status-dot online" id="statusDot"></div>
+<div class="status-txt" id="statusTxt">SYSTEMS ONLINE</div>
+<div class="live-badge" id="liveBadge">● LIVE MONITORING</div>
+<div class="voice-toggle" onclick="toggleVoice()" id="voiceToggle">
+<div class="toggle-switch on" id="toggleSwitch"><div class="toggle-knob"></div></div>
+<div class="toggle-lbl">VOICE</div>
+</div>
+</div>
+</div>
+
+<!-- TIME BAR -->
+
+<div class="time-bar">
+<div class="time-el"><div class="time-lbl">EST TIME</div><div class="time-val" id="clock">--:--:--</div></div>
+<div class="time-sep">|</div>
+<div class="time-el"><div class="time-lbl">SESSION</div><div class="time-val">08:30 — 11:00</div></div>
+<div class="time-sep">|</div>
+<div class="time-el"><div class="time-lbl">INSTRUMENT</div><div class="time-val" style="color:var(--yel)">NQ FUTURES</div></div>
+<div class="time-sep">|</div>
+<div class="session-status session-closed" id="sessionBadge">SESSION CLOSED</div>
+</div>
+
+<!-- MAIN GRID -->
+
+<div class="main-grid">
+<div class="panel">
+<div class="panel-head">
+<div class="panel-title">ACTIVE TRADE</div>
+<div style="font-size:10px;font-family:var(--mono);color:var(--t3)" id="tradeStatus">NO POSITION</div>
+</div>
+<div class="panel-body">
+<div class="metric-grid">
+<div class="metric"><div class="metric-l">SIDE</div><div class="metric-v neu" id="tradeSide">—</div></div>
+<div class="metric"><div class="metric-l">ENTRY</div><div class="metric-v neu" id="tradeEntry">—</div></div>
+<div class="metric"><div class="metric-l">STOP LOSS</div><div class="metric-v neg" id="tradeSL">—</div></div>
+<div class="metric"><div class="metric-l">TAKE PROFIT</div><div class="metric-v pos" id="tradeTP">—</div></div>
+</div>
+<div class="pnl-bar-wrap">
+<div class="pnl-bar-lbl"><span>PROGRESS TO TP</span><span id="pnlVal">$0.00</span></div>
+<div class="pnl-bar-track"><div class="pnl-bar-fill" id="pnlBar" style="width:0%"></div></div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head">
+<div class="panel-title">SESSION STATS</div>
+<div style="font-size:10px;font-family:var(--mono);color:var(--t3)">TODAY</div>
+</div>
+<div class="panel-body">
+<div class="metric-grid">
+<div class="metric"><div class="metric-l">SESSION P&L</div><div class="metric-v pos" id="sessionPnl">$0.00</div></div>
+<div class="metric"><div class="metric-l">TRADES TODAY</div><div class="metric-v neu" id="tradesToday">0 / 1</div></div>
+<div class="metric"><div class="metric-l">WIN RATE</div><div class="metric-v yel">49.37%</div></div>
+<div class="metric"><div class="metric-l">PROFIT FACTOR</div><div class="metric-v yel">1.54</div></div>
+</div>
+<div class="pnl-bar-wrap">
+<div class="pnl-bar-lbl"><span>5YR BACKTEST EDGE</span><span style="color:var(--green)">CONFIRMED</span></div>
+<div class="pnl-bar-track"><div class="pnl-bar-fill" style="width:74%"></div></div>
+</div>
+</div>
+</div>
+
+<!-- CHAT -->
+
+<div class="panel chat-panel">
+<div class="panel-head">
+<div class="panel-title">J.A.R.V.I.S. COMMUNICATIONS</div>
+<div style="font-size:10px;font-family:var(--mono);color:var(--green)" id="liveStatus">● STANDBY</div>
+</div>
+<div class="chat-body" id="chatBody">
+<div class="msg">
+<div class="msg-icon">🤖</div>
+<div class="msg-content">
+<div class="msg-sender">J.A.R.V.I.S.</div>
+<div class="msg-text arc">Good morning, Sir. All systems are online. Please enter your API key above to activate live trade detection. I will automatically announce when Jarvis enters a position.</div>
+<div class="msg-time" id="initTime">--:--:--</div>
+</div>
+</div>
+</div>
+<div class="speaking-wrap" id="speakingWrap">
+<div class="wave"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+<div class="speaking-txt">J.A.R.V.I.S. IS SPEAKING...</div>
+</div>
+<div class="input-row">
+<input type="text" class="trade-input" id="userInput" placeholder="Speak to J.A.R.V.I.S...." onkeydown="if(event.key==='Enter')sendMessage()">
+<button class="send-btn" onclick="sendMessage()">SEND</button>
+</div>
+</div>
+</div>
+
+<!-- CONTROLS -->
+
+<div class="controls">
+<button class="ctrl-btn" onclick="simulateLong()"><div class="ctrl-icon">📈</div><div class="ctrl-lbl">TEST LONG<br>SIGNAL</div></button>
+<button class="ctrl-btn" onclick="simulateShort()"><div class="ctrl-icon">📉</div><div class="ctrl-lbl">TEST SHORT<br>SIGNAL</div></button>
+<button class="ctrl-btn" onclick="simulateDrawdown()"><div class="ctrl-icon">⚠️</div><div class="ctrl-lbl">TEST<br>DRAWDOWN</div></button>
+<button class="ctrl-btn" onclick="simulateWin()"><div class="ctrl-icon">✅</div><div class="ctrl-lbl">TEST<br>WIN</div></button>
+</div>
+
+<!-- BOTTOM STATS -->
+
+<div class="bottom-grid">
+<div class="stat-mini"><div class="stat-mini-l">5YR NET P&L</div><div class="stat-mini-v" style="color:var(--green)">$208,500</div></div>
+<div class="stat-mini"><div class="stat-mini-l">MAX DRAWDOWN</div><div class="stat-mini-v" style="color:var(--red)">$10,500</div></div>
+<div class="stat-mini"><div class="stat-mini-l">RISK PER TRADE</div><div class="stat-mini-v" style="color:var(--arc)">$500</div></div>
+<div class="stat-mini"><div class="stat-mini-l">REWARD TARGET</div><div class="stat-mini-v" style="color:var(--yel)">$1,000</div></div>
+</div>
+
+</div>
+
+<script>
+// CONFIG
+const BIN_ID = '69d57fd7856a6821890c2935';
+let ACCESS_KEY = '';
+let voiceOn = true;
+let lastTimestamp = '';
+let pollingInterval = null;
+let sessionPnlVal = 0;
+let synth = window.speechSynthesis;
+let britishVoice = null;
+
+// LOAD VOICE
+function loadVoice(){
+const voices = synth.getVoices();
+britishVoice = voices.find(v=>v.lang==='en-GB'||v.name.includes('Daniel')||v.name.includes('British')||v.name.includes('UK'))
+|| voices.find(v=>v.lang.startsWith('en')) || voices[0];
+}
+if(synth.onvoiceschanged!==undefined) synth.onvoiceschanged=loadVoice;
+loadVoice();
+
+// SPEAK
+function speak(text){
+if(!voiceOn) return;
+synth.cancel();
+const utt = new SpeechSynthesisUtterance(text);
+utt.voice = britishVoice;
+utt.rate = 0.88;
+utt.pitch = 0.9;
+utt.volume = 1;
+document.getElementById('speakingWrap').classList.add('active');
+utt.onend = ()=>document.getElementById('speakingWrap').classList.remove('active');
+synth.speak(utt);
+}
+
+// TOGGLE VOICE
+function toggleVoice(){
+voiceOn=!voiceOn;
+document.getElementById('toggleSwitch').classList.toggle('on',voiceOn);
+}
+
+// ACTIVATE LIVE
+function activateLive(){
+const key = document.getElementById('apiKeyInput').value.trim();
+if(!key){alert('Please enter your X-Access-Key');return;}
+ACCESS_KEY = key;
+document.getElementById('apiSetup').style.display='none';
+document.getElementById('liveBadge').classList.add('active');
+document.getElementById('liveStatus').textContent='● LIVE';
+addMsg('J.A.R.V.I.S.','Live trade detection is now active, Sir. I am polling for new trades every 3 seconds. I will announce immediately when Jarvis enters a position.');
+startPolling();
+}
+
+// START POLLING
+function startPolling(){
+pollingInterval = setInterval(checkForTrade, 3000);
+}
+
+// CHECK JSONBIN FOR NEW TRADE
+async function checkForTrade(){
+try{
+const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,{
+headers:{'X-Access-Key': ACCESS_KEY}
+});
+const data = await res.json();
+const record = data.record;
+
+if(record && record.trade && record.trade.timestamp){
+const ts = record.trade.timestamp;
+if(ts !== lastTimestamp && ts !== ''){
+lastTimestamp = ts;
+announceTrade(record.trade);
+}
+}
+} catch(err){
+console.log('Polling error:', err);
+}
+}
+
+// ANNOUNCE TRADE
+function announceTrade(trade){
+const side = trade.side || 'unknown';
+const entry = trade.entry || '—';
+const sl = trade.sl || '—';
+const tp = trade.tp || '—';
+const type = trade.type || 'first';
+
+// Update UI
+document.getElementById('tradeSide').textContent = side.toUpperCase() + (side==='long'?' ↑':' ↓');
+document.getElementById('tradeSide').className = 'metric-v '+(side==='long'?'pos':'neg');
+document.getElementById('tradeEntry').textContent = entry;
+document.getElementById('tradeSL').textContent = sl;
+document.getElementById('tradeTP').textContent = tp;
+document.getElementById('tradeStatus').textContent = 'POSITION OPEN';
+document.getElementById('tradesToday').textContent = '1 / 1';
+document.getElementById('pnlBar').style.width = '5%';
+
+const action = side === 'long' ? 'bullish liquidity sweep has been confirmed' : 'bearish liquidity sweep has been confirmed above recent highs';
+const direction = side === 'long' ? 'long' : 'short';
+
+const msg = `Sir, a ${action}. Jarvis has entered a ${direction} position at ${entry}. Stop loss is placed at ${sl}, representing a risk of $500. Take profit target is ${tp}, for a reward of $1,000. This is a 1 to 2 risk reward setup, fully consistent with our 5 year backtest parameters. I suggest we remain composed and allow the algorithm to execute as designed.`;
+
+addMsg('J.A.R.V.I.S.', msg);
+}
+
+// ADD MESSAGE
+function addMsg(sender, text, isJarvis=true){
+const body = document.getElementById('chatBody');
+const now = getEstTime();
+const div = document.createElement('div');
+div.className='msg';
+div.innerHTML=`
+<div class="msg-icon">${isJarvis?'🤖':'👤'}</div>
+<div class="msg-content">
+<div class="msg-sender">${sender}</div>
+<div class="msg-text ${isJarvis?'arc':''}">${text}</div>
+<div class="msg-time">${now}</div>
+</div>`;
+body.appendChild(div);
+body.scrollTop=body.scrollHeight;
+if(isJarvis) speak(text);
+}
+
+// CLOCK
+function getEstTime(){
+return new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function updateClock(){
+const t=getEstTime();
+document.getElementById('clock').textContent=t;
+document.getElementById('initTime').textContent=t;
+const parts=t.split(':');
+const h=parseInt(parts[0]),m=parseInt(parts[1]);
+const badge=document.getElementById('sessionBadge');
+if((h===8&&m>=30)||h===9||h===10||(h===11&&m===0)){badge.textContent='SESSION ACTIVE';badge.className='session-status session-active';}
+else if(h<8||(h===8&&m<30)){badge.textContent='PRE-MARKET';badge.className='session-status session-premarket';}
+else{badge.textContent='SESSION CLOSED';badge.className='session-status session-closed';}
+}
+setInterval(updateClock,1000);
+updateClock();
+
+// USER MESSAGE
+function sendMessage(){
+const input=document.getElementById('userInput');
+const text=input.value.trim();
+if(!text) return;
+addMsg('YOU',text,false);
+input.value='';
+setTimeout(()=>{
+const lower=text.toLowerCase();
+let response='';
+if(lower.includes('revenge')||lower.includes('another trade')){
+response=`Sir, I must firmly advise against this. We have reached our 1 trade per session limit. Revenge trading is the single greatest destroyer of funded accounts. I insist we close the platform and return tomorrow with a clear mind.`;
+} else if(lower.includes('stop')||lower.includes('turn off')){
+response=`Sir, disabling the algorithm during a drawdown is precisely when discipline matters most. Our 49.37% win rate means losses are expected. Trust the mathematics.`;
+} else if(lower.includes('scared')||lower.includes('worried')||lower.includes('nervous')){
+response=`I understand, Sir. Over 983 trades across 5 years the system generated $208,500 in profit with a maximum drawdown of only $10,500. The mathematics are on our side. Trust the process.`;
+} else if(lower.includes('how')){
+response=`All systems nominal, Sir. I am continuously monitoring NQ price action and polling for new trade signals every 3 seconds. I remain vigilant.`;
+} else {
+const d=[`Understood, Sir. I am processing your input.`,`Noted, Sir. All trading systems remain operational.`,`Sir, my primary directive is to protect your capital and execute the Jarvis 5m Continuation Model with precision.`];
+response=d[Math.floor(Math.random()*d.length)];
+}
+addMsg('J.A.R.V.I.S.',response);
+},800);
+}
+
+// TEST SIMULATIONS
+function simulateLong(){
+const entry=(19250+Math.floor(Math.random()*200)).toFixed(2);
+const sl=(parseFloat(entry)-25).toFixed(2);
+const tp=(parseFloat(entry)+50).toFixed(2);
+announceTrade({side:'long',entry,sl,tp,type:'first',timestamp:Date.now().toString()});
+}
+
+function simulateShort(){
+const entry=(19250+Math.floor(Math.random()*200)).toFixed(2);
+const sl=(parseFloat(entry)+25).toFixed(2);
+const tp=(parseFloat(entry)-50).toFixed(2);
+announceTrade({side:'short',entry,sl,tp,type:'first',timestamp:Date.now().toString()});
+}
+
+function simulateDrawdown(){
+const dd=Math.floor(Math.random()*300+100);
+const msgs=[
+`Sir, the position is currently ${dd} points in drawdown. This volatility is well within our 5 year historical parameters. I suggest we maintain our position and allow the algorithm to execute as designed.`,
+`Sir, I detect elevated volatility. The current drawdown of $${dd} is a normal occurrence in our 5m continuation model. Please do not override the stop loss.`,
+`Sir, I must advise against any manual intervention. Our 5 year backtest confirms that patience is the edge.`
+];
+addMsg('J.A.R.V.I.S.',msgs[Math.floor(Math.random()*msgs.length)]);
+}
+
+function simulateWin(){
+sessionPnlVal+=1000;
+document.getElementById('sessionPnl').textContent='+$'+sessionPnlVal.toFixed(2);
+document.getElementById('pnlBar').style.width='100%';
+document.getElementById('tradeStatus').textContent='POSITION CLOSED';
+setTimeout(()=>{
+document.getElementById('tradeSide').textContent='—';
+document.getElementById('tradeSide').className='metric-v neu';
+document.getElementById('tradeEntry').textContent='—';
+document.getElementById('tradeSL').textContent='—';
+document.getElementById('tradeTP').textContent='—';
+document.getElementById('tradeStatus').textContent='NO POSITION';
+document.getElementById('pnlBar').style.width='0%';
+},3000);
+addMsg('J.A.R.V.I.S.',`Excellent, Sir. Take profit has been reached. The position has been closed for a gain of $1,000. Session P&L is now +$${sessionPnlVal}. Well done for trusting the algorithm. The trading window remains open but our session limit has been reached. I suggest we power down the monitors.`);
+}
+</script>
+
+</body>
+</html>
