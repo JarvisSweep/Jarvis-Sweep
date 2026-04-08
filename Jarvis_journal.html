@@ -4,6 +4,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jarvis Sweep">
+<meta name="theme-color" content="#00d4ff">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>Jarvis Sweep — Compass</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -500,6 +507,15 @@ l.innerHTML=[...P].reverse().map(p=>'<div class="pi"><div class="pl"><div class=
 
 function updateAll(){upStats();renderEQ();renderMo();renderRec();renderLog();renderPayouts();upEval();}
 updateAll();renderCal();renderScore(0);
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Jarvis SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
 </script>
 
 </body>
